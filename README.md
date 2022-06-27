@@ -1,2 +1,3 @@
 # Automatic emission reporting
-Goal: automatically fill emission reporting templates 1 and 2 from VEDA data.
+_April-June 2022, merlijn_
+
