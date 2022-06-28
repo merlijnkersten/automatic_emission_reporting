@@ -229,22 +229,167 @@ att_io <- c('VAR_FIn','VAR_FOut')
 
 t$attribute %>% as.character()%>% filter(!str_detect(t$attribute,"M$"),str_detect(t$attribute,"VAR_"))
 
-ta$commodity %>% unique() %>% sort()
+
 
 
 # ---- new stuff ----
 
-(ta %>% filter(commodity=="NOx_1A2", scenario=="NKEP_high", period==2015, attribute=="VAR_FOut"))$ pv %>% sum()
+library(openxlsx)
+
+get_commodity_value <- function(x) {
+  # Get sum of VAR_FOut values in NKEP_high for commodity x.
+  value <- (ta %>% filter(commodity==x, 
+          scenario=="NKEP_high", 
+          period==2025, 
+          attribute=="VAR_FOut"))$pv %>% sum()
+  return(value)
+}
 
 
-columns_a = c("CO2", "CH4", "SOx", "PM", "NOx", "N20")
+a_to_1 <- function(a) {
+  alphabet <- "abcdefghijklmnopqrstuvwxyz"
+  #            12345678901234567890123456
+  # Find R version of Python's 'find()'
+  lst <- unlist(strsplit(alphabet, split=""))
+  #lst <- list("a", "b", "c", ..., "z")
+  number <- match(tolower(a), lst)
+  return(number)
+}
 
-rows = c("1A1a", "1A1b", "1A1c", "1A2", "1A3", "1A4ai", "1A4bi", "1A4ci", 
-         "1A4cii", "1B1", "1B2", "2A1", "2A2", "2A3", "2A4", "2C1", "2D1")
-
-for (row in rows){
-  for (column in columns_a){
-    print(column, row, sep=" ")
+alpha_num <- function(i) {
+  if (nchar(i) == 1) {
+    return(a_to_1(i))
+  } else if (nchar(i)==2) {
+    i_1 <- substr(i, 1, 1)
+    i_2 <- substr(i, 2, 2)
+    return(a_to_1(i_1)*26 + a_to_1(i_2)) 
+  } else {
+    len = nchar(i)
+    stop(paste("Length of ", len, " not supported yet ('", i, "')", sep=""))
   }
 }
 
+# APPROACH
+# Create a single-column dataframe for every pollutant
+# Then write this dataframe to the correct cells in the Excel file using XLConnect
+
+
+commodities <- ta$commodity %>% unique() %>% sort()
+
+rows_in_veda <- c("1A1a", "1A1b", "1A1c", "1A2", "1A3", "1A4ai", "1A4bi", "1A4ci", 
+                  "1A4cii", "1B1", "1B2", "2A1", "2A2", "2A3", "2A4", "2C1", "2D1")
+
+# -------- A annex_iV_rev2022_v1 --------
+
+
+path_excel ="C:/Users/czpkersten/Documents/automatic_emission_reporting/annex_iV_rev2022_v1.xlsx"
+path_excel ="C:/Users/czpkersten/Documents/automatic_emission_reporting/test.xlsx"
+path_excel ="C:/Users/czpkersten/Documents/automatic_emission_reporting/annex_iV_rev2022_v1 - Copy.xlsx"
+wb <- loadWorkbook(path_excel)
+
+
+#columns_a = c("CO2", "CH4", "SOx", "PM", "NOx", "N20")
+columns_a <- list(
+  # pollutant = column in excel file
+  "NOx" = "E",
+  "SOx" = "G",
+  "PM"  = "I") #Or J
+
+# Figure out how to do this automatically from the Excel file.
+rows_a <- read.csv("C:/Users/czpkersten/Documents/automatic_emission_reporting/rows_a.csv", header=FALSE)$V1
+
+edge_rows_a <- list(#code in Excel file = code in VEDA
+                    "1A2a"     = "1A2",
+                    "1A3ai(i)" = "1A3",
+                    "1B1a"     = "1B1")
+
+for (column in names(columns_a)) {
+  values <- c()
+  for (row in rows_a) {
+    if (row %in% names(edge_rows_a)) {
+      row <- edge_rows_a[row]
+    }
+    commodity <- paste(column, row, sep="_")
+    if (commodity %in% commodities) {
+      commodity_value <- get_commodity_value(commodity)
+    } else {
+      commodity_value <- NA
+    }
+    values <- append(values, commodity_value)
+  }
+  
+  col <- alpha_num(columns_a[column])
+  
+  writeData(wb, "2025_WM", values, startCol=col, startRow=14, colNames=FALSE, rowNames=FALSE  )
+}
+
+
+path = "C:/Users/czpkersten/Documents/automatic_emission_reporting/test output a.xlsx"
+saveWorkbook(wb, path, overwrite=TRUE)
+
+# -------- B GovReg_Proj_T1a_T1b_T5a_T5b_v1.1 ----
+
+path_excel ="C:/Users/czpkersten/Documents/automatic_emission_reporting/GovReg_Proj_T1a_T1b_T5a_T5b_v1.1 - Copy.xlsx"
+wb <- loadWorkbook(path_excel)
+
+columns_b <- list(
+  # used: 2020 (if columns are numeric, do column + (year - 2015)
+  # pollutant = column in excel file
+  "C"   = "K",
+  "CH4" = "AJ", 
+  "N20" = "BI"
+)
+
+rows_b <- read.csv("C:/Users/czpkersten/Documents/automatic_emission_reporting/rows_b.csv", header=FALSE)$V1
+
+edge_rows_b = list(#code in Excel file = code in VEDA
+                   "1A4a" = "1A4ai",
+                   "1A4b" = "1A4bi",
+                   "2D"   = "2D1")
+#"1A4ai","1A4bi","1A4ci","1A4cii""2A3","2A3","2A4","2D1"
+
+for (column in names(columns_b)) {
+  values <- c()
+  for (row in rows_b) {
+    
+    if (row %in% names(edge_rows_b)) {
+      row <- edge_rows_b[row]
+    }
+    commodity <- paste(column, row, sep="_")
+    print(commodity)
+    print(row)
+    if (row=="1A4c") {
+      print("IF")
+      commodity_1 <- paste(column, "1A4ci", sep="_")
+      commodity_2 <- paste(column, "1A4cii", sep="_")
+      commodity_value <- get_commodity_value(commodity_1) + get_commodity_value(commodity_2)
+      print(commodity_value)
+    } else if (row=="2A"){
+      print("ELSE IF 1")
+      commodity_1 <- paste(column, "2A1", sep="_")
+      commodity_2 <- paste(column, "2A2", sep="_")
+      commodity_3 <- paste(column, "2A3", sep="_")
+      commodity_4 <- paste(column, "2A4", sep="_")
+      commodity_value <- get_commodity_value(commodity_1) + get_commodity_value(commodity_2) +
+        get_commodity_value(commodity_3) + get_commodity_value(commodity_4)
+      print(commodity_value)
+    } else if (commodity %in% commodities) {
+      print("ELSE IF 2")
+      commodity_value <- get_commodity_value(commodity)
+      print(commodity_value)
+    } else {
+      print("ELSE")
+      commodity_value <- NA
+      print(commodity_value)
+    }
+    print(commodity_value)
+    values <- append(values, commodity_value)
+  }
+  
+  col <- alpha_num(columns_b[column])
+  
+  writeData(wb, "Table1a", values, startCol=col, startRow=19, colNames=FALSE, rowNames=FALSE  )
+}
+
+path = "C:/Users/czpkersten/Documents/automatic_emission_reporting/test output b.xlsx"
+saveWorkbook(wb, path, overwrite=TRUE)
