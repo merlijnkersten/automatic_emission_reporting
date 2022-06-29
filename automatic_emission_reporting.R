@@ -1,5 +1,6 @@
 # This code requires the 'ta' data table.
 # I do not understand what T_results_v02+ code is required to create it.
+# I included roughly the first 240 lines from T_results_v02+ below.
 # A significant part of the code below (except for "Functions" and further) is unnecessary.
 # Feel free to remove the unnecessary code as you see fit.
 
@@ -244,7 +245,7 @@ library(openxlsx)
 
 
 get_commodity_value <- function(i, column) {
-  # Get the pollution values for every NFR code in i for the specified column.
+  # Get the pollution value for every NFR code in i for the specified column.
   
   format_commodity <- function(j, column) {
     # Create a vector of formatted commodities from a vector of commodity codes and a column.
@@ -252,12 +253,12 @@ get_commodity_value <- function(i, column) {
     vector <- c()
     
     for (x in j) {
+      # Format in VEDA: <pollutant>_<NFR code> (e.g. C_1A1a)
       commodity <- paste(column, x, sep="_")
       vector <- append(vector, commodity)
     }
     
     return(vector)
-    
   }
   
   i_formatted <- format_commodity(i, column)
@@ -265,7 +266,7 @@ get_commodity_value <- function(i, column) {
   # Looks up the PV value for every commodity in 'i'
   
   find_value <- function(x) {
-    # Get PV sum of VAR_FOut values in NKEP_high in 2025 for commodity x.
+    # Get PV sum of VAR_FOut values in NKEP_high in 2025 for commodity 'x'.
     # PARAMETER
     value <- (ta %>% filter(commodity==x, 
             scenario=="NKEP_high", 
@@ -277,12 +278,11 @@ get_commodity_value <- function(i, column) {
   value_sum = 0
   
   for (y in i_formatted) {
-    # Find value for every commodity x in vector i (also works if i is a single commodity code character)
+    # Find value for every commodity 'x' in vector 'i' (also works if 'i' is a single commodity code character)
     value_sum <- value_sum + find_value(y)
   }
   
   return(value_sum)
-  
 }
 
 
@@ -317,7 +317,6 @@ alpha_num <- function(i) {
   
     len = nchar(i)
     stop(paste("Length of ", len, " not supported yet ('", i, "')", sep=""))
-  
   }
 }
 
@@ -354,10 +353,11 @@ rows_a <- read.csv("C:/Users/czpkersten/Documents/automatic_emission_reporting/r
 
 # These rows don't exist in VEDA but a similar code does exist
 # PARAMETER
-edge_rows_a <- list(#code in Excel file = code in VEDA
-                    "1A2a"     = "1A2",
-                    "1A3ai(i)" = "1A3",
-                    "1B1a"     = "1B1")
+edge_rows_a <- list(
+  #code in Excel file = code in VEDA
+  "1A2a"     = "1A2",
+  "1A3ai(i)" = "1A3",
+  "1B1a"     = "1B1")
 
 for (column in names(columns_a)) {
   # For every column in the Excel file
@@ -370,7 +370,7 @@ for (column in names(columns_a)) {
       row <- edge_rows_a[row]
     }
     
-    # Create full commodity name (as in VEDA): <pollutant>_<NFR code> (e.g, C_1A1a)
+    # Create full commodity name (as in VEDA): <pollutant>_<NFR code> (e.g. C_1A1a)
     commodity <- paste(column, row, sep="_")
     
     if (commodity %in% commodities) {
@@ -380,7 +380,6 @@ for (column in names(columns_a)) {
     } else {
       # Else, return NA
       commodity_value <- NA
-    
     }
     
     # Save every row value to the values vector
@@ -391,7 +390,6 @@ for (column in names(columns_a)) {
   col <- alpha_num(columns_a[column])
   # PARAMETER
   writeData(wb, "2025_WM", values, startCol=col, startRow=14, colNames=FALSE, rowNames=FALSE  )
-
   }
 
 # Save the Excel file
@@ -420,18 +418,9 @@ columns_b <- list(
 # PARAMETER
 rows_b <- read.csv("C:/Users/czpkersten/Documents/automatic_emission_reporting/rows_b.csv", header=FALSE)$V1
 
-# PARAMETER
-edge_rows_b = list(#code in Excel file = code in VEDA
-                   "1A4a" = "1A4ai",
-                   "1A4b" = "1A4bi")
-
 for (column in names(columns_b)) {
   values <- c()
   for (row in rows_b) {
-    
-    if (row %in% names(edge_rows_b)) {
-      row <- edge_rows_b[row]
-    }
     
     commodity <- paste(column, row, sep="_")
     
@@ -455,6 +444,16 @@ for (column in names(columns_b)) {
     } else if (row=="1A4") {
       # PARAMETER
       rows_vector <- c("1A4ai", "1A4bi", "1A4ci", "1A4cii")
+      commodity_value <- get_commodity_value(rows_vector, column)
+      
+    } else if (row=="1A4a") {
+      #PARAMETER
+      rows_vector <- c("1A4ai")
+      commodity_value <- get_commodity_value(rows_vector, column)
+      
+    } else if (row=="1A4b") {
+      #PARAMETER
+      rows_vector <- c("1A4bi")
       commodity_value <- get_commodity_value(rows_vector, column)
       
     } else if (row=="1A4c") {
@@ -484,11 +483,9 @@ for (column in names(columns_b)) {
     } else {
       
       commodity_value <- NA
-    
     }
     
     values <- append(values, commodity_value)
-    
   }
 
   col <- alpha_num(columns_b[column])
