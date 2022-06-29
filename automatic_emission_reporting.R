@@ -346,7 +346,7 @@ columns_a <- list(
   # pollutant (VEDA name) = column in excel file
   "NOx" = "E",
   "SOx" = "G",
-  "PM"  = "I") #Or J
+  "PM"  = "K") # TSP
 
 # Load rows of file A (from a separate CSV)
 # PARAMETER
@@ -396,7 +396,7 @@ for (column in names(columns_a)) {
 
 # Save the Excel file
 # PARAMETER
-path = "C:/Users/czpkersten/Documents/automatic_emission_reporting/test output a.xlsx"
+path = "C:/Users/czpkersten/Documents/automatic_emission_reporting/File a output.xlsx"
 saveWorkbook(wb, path, overwrite=TRUE)
 
 
@@ -498,6 +498,6 @@ for (column in names(columns_b)) {
 }
 
 # PARAMETER
-path = "C:/Users/czpkersten/Documents/automatic_emission_reporting/test output b.xlsx"
+path = "C:/Users/czpkersten/Documents/automatic_emission_reporting/File b output.xlsx"
 saveWorkbook(wb, path, overwrite=TRUE)
 
