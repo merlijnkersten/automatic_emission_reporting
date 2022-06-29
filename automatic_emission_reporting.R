@@ -236,13 +236,24 @@ t$attribute %>% as.character()%>% filter(!str_detect(t$attribute,"M$"),str_detec
 
 library(openxlsx)
 
-get_commodity_value <- function(x) {
-  # Get sum of VAR_FOut values in NKEP_high for commodity x.
-  value <- (ta %>% filter(commodity==x, 
-          scenario=="NKEP_high", 
-          period==2025, 
-          attribute=="VAR_FOut"))$pv %>% sum()
-  return(value)
+get_commodity_value <- function(i) {
+  find_value <- function(x) {
+    # Get sum of VAR_FOut values in NKEP_high for commodity x.
+    value <- (ta %>% filter(commodity==x, 
+            scenario=="NKEP_high", 
+            period==2025, 
+            attribute=="VAR_FOut"))$pv %>% sum()
+    return(value)
+  }
+  
+  value_sum = 0
+  
+  for (x in i) {
+    value_sum <- value_sum + find_value(x)
+  }
+  
+  return(value_sum)
+  
 }
 
 
@@ -268,6 +279,20 @@ alpha_num <- function(i) {
     stop(paste("Length of ", len, " not supported yet ('", i, "')", sep=""))
   }
 }
+
+
+commodity_vector <- function(i, column) {
+  vector <- c()
+  
+  for (x in i) {
+    commodity <- paste(column, x, sep="_")
+    vector <- append(vector, commodity)
+  }
+  
+  return(vector)
+  
+}
+
 
 # APPROACH
 # Create a single-column dataframe for every pollutant
@@ -329,7 +354,9 @@ saveWorkbook(wb, path, overwrite=TRUE)
 
 # -------- B GovReg_Proj_T1a_T1b_T5a_T5b_v1.1 ----
 
-path_excel ="C:/Users/czpkersten/Documents/automatic_emission_reporting/GovReg_Proj_T1a_T1b_T5a_T5b_v1.1 - Copy.xlsx"
+#path_excel ="C:/Users/czpkersten/Documents/automatic_emission_reporting/GovReg_Proj_T1a_T1b_T5a_T5b_v1.1 - Copy.xlsx"
+#path_excel ="C:/Users/czpkersten/Documents/automatic_emission_reporting/test.xlsx"
+path_excel ="C:/Users/czpkersten/Documents/automatic_emission_reporting/GovReg_Proj_T1a_T1b_T5a_T5b_v1.1 - Table1a.xlsx"
 wb <- loadWorkbook(path_excel)
 
 columns_b <- list(
@@ -344,9 +371,7 @@ rows_b <- read.csv("C:/Users/czpkersten/Documents/automatic_emission_reporting/r
 
 edge_rows_b = list(#code in Excel file = code in VEDA
                    "1A4a" = "1A4ai",
-                   "1A4b" = "1A4bi",
-                   "2D"   = "2D1")
-#"1A4ai","1A4bi","1A4ci","1A4cii""2A3","2A3","2A4","2D1"
+                   "1A4b" = "1A4bi")
 
 for (column in names(columns_b)) {
   values <- c()
@@ -355,41 +380,117 @@ for (column in names(columns_b)) {
     if (row %in% names(edge_rows_b)) {
       row <- edge_rows_b[row]
     }
+    
     commodity <- paste(column, row, sep="_")
-    print(commodity)
-    print(row)
-    if (row=="1A4c") {
-      print("IF")
-      commodity_1 <- paste(column, "1A4ci", sep="_")
-      commodity_2 <- paste(column, "1A4cii", sep="_")
-      commodity_value <- get_commodity_value(commodity_1) + get_commodity_value(commodity_2)
-      print(commodity_value)
-    } else if (row=="2A"){
-      print("ELSE IF 1")
-      commodity_1 <- paste(column, "2A1", sep="_")
-      commodity_2 <- paste(column, "2A2", sep="_")
-      commodity_3 <- paste(column, "2A3", sep="_")
-      commodity_4 <- paste(column, "2A4", sep="_")
-      commodity_value <- get_commodity_value(commodity_1) + get_commodity_value(commodity_2) +
-        get_commodity_value(commodity_3) + get_commodity_value(commodity_4)
-      print(commodity_value)
+    
+    if (row=="1") {
+      
+      commodity_vector <- c(
+        paste(column, "1A1a", sep="_"),
+        paste(column, "1A1b", sep="_"),
+        paste(column, "1A1c", sep="_"),
+        paste(column, "1A2", sep="_"),
+        paste(column, "1A3", sep="_"),
+        paste(column, "1A4ai", sep="_"),
+        paste(column, "1A4bi", sep="_"),
+        paste(column, "1A4ci", sep="_"),
+        paste(column, "1A4cii", sep="_"),
+        paste(column, "1B1", sep="_"),
+        paste(column, "1B2", sep="_")
+      )
+      commodity_value <- get_commodity_value(commodity_vector)
+      
+    } else if (row=="1A") {
+      
+      commodity_vector <- c(
+        paste(column, "1A1a", sep="_"),
+        paste(column, "1A1b", sep="_"),
+        paste(column, "1A1c", sep="_"),
+        paste(column, "1A2", sep="_"),
+        paste(column, "1A3", sep="_"),
+        paste(column, "1A4ai", sep="_"),
+        paste(column, "1A4bi", sep="_"),
+        paste(column, "1A4ci", sep="_"),
+        paste(column, "1A4cii", sep="_")
+      )
+      commodity_value <- get_commodity_value(commodity_vector)
+      
+    } else if (row=="1A1") {
+      
+      commodity_vector <- c(
+        paste(column, "1A1a", sep="_"),
+        paste(column, "1A1b", sep="_"),
+        paste(column, "1A1c", sep="_")
+      )
+      commodity_value <- get_commodity_value(commodity_vector)
+      
+    } else if (row=="1A4") {
+      
+      commodity_vector <- c(
+        paste(column, "1A4ai", sep="_"),
+        paste(column, "1A4bi", sep="_"),
+        paste(column, "1A4ci", sep="_"),
+        paste(column, "1A4cii", sep="_")
+      )
+      commodity_value <- get_commodity_value(commodity_vector)
+      
+    } else if (row=="1A4c") {
+      
+      commodity_vector <- c(
+        paste(column, "1A4ci", sep="_"),
+        paste(column, "1A4cii", sep="_")
+      )
+      commodity_value <- get_commodity_value(commodity_vector)
+      
+    } else if (row=="1B") {
+      
+      commodity_vector <- c(
+        paste(column, "1B1", sep="_"),
+        paste(column, "1B2", sep="_")
+      )
+      commodity_value <- get_commodity_value(commodity_vector)
+      
+    } else if (row=="2") {
+      
+      commodity_vector <- c(
+        paste(column, "2A1", sep="_"),
+        paste(column, "2A2", sep="_"),
+        paste(column, "2A3", sep="_"),
+        paste(column, "2A4", sep="_"),
+        paste(column, "2C1", sep="_"),
+        paste(column, "2D2", sep="_")
+      )
+      commodity_value <- get_commodity_value(commodity_vector)
+      
+    } else if (row=="2A") {
+      
+      commodity_vector <- c(
+        paste(column, "2A1", sep="_"),
+        paste(column, "2A2", sep="_"),
+        paste(column, "2A3", sep="_"),
+        paste(column, "2A4", sep="_")
+      )
+      commodity_value <- get_commodity_value(commodity_vector)
+      
     } else if (commodity %in% commodities) {
-      print("ELSE IF 2")
+      
       commodity_value <- get_commodity_value(commodity)
-      print(commodity_value)
+      
     } else {
-      print("ELSE")
+      
       commodity_value <- NA
-      print(commodity_value)
+    
     }
-    print(commodity_value)
+    
     values <- append(values, commodity_value)
+    
   }
-  
+
   col <- alpha_num(columns_b[column])
-  
-  writeData(wb, "Table1a", values, startCol=col, startRow=19, colNames=FALSE, rowNames=FALSE  )
+  writeData(wb, "Table1a", values, startCol=col, startRow=19, colNames=FALSE, rowNames=FALSE)
+
 }
 
 path = "C:/Users/czpkersten/Documents/automatic_emission_reporting/test output b.xlsx"
 saveWorkbook(wb, path, overwrite=TRUE)
+
