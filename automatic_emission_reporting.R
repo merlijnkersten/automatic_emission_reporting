@@ -336,7 +336,7 @@ rows_in_veda <- c("1A1a", "1A1b", "1A1c", "1A2", "1A3", "1A4ai", "1A4bi", "1A4ci
 
 # Load Excel file
 # PARAMETER
-path_excel ="C:/Users/czpkersten/Documents/automatic_emission_reporting/annex_iV_rev2022_v1.xlsx"
+path_excel = "C:/Users/Merlijn Kersten/Documents/UK/automatic_emission_reporting/annex_iV_rev2022_v1.xlsx"
 wb <- loadWorkbook(path_excel)
 
 # Pollutants and their respective Excel columns
@@ -349,7 +349,7 @@ columns_a <- list(
 
 # Load rows of file A (from a separate CSV)
 # PARAMETER
-rows_a <- read.csv("C:/Users/czpkersten/Documents/automatic_emission_reporting/rows_a.csv", header=FALSE)$V1
+rows_a <- read.csv("C:/Users/Merlijn Kersten/Documents/UK/automatic_emission_reporting/rows_a.csv", header=FALSE)$V1
 
 # These rows don't exist in VEDA but a similar code does exist
 # PARAMETER
@@ -394,7 +394,7 @@ for (column in names(columns_a)) {
 
 # Save the Excel file
 # PARAMETER
-path = "C:/Users/czpkersten/Documents/automatic_emission_reporting/File a output.xlsx"
+path = "C:/Users/Merlijn Kersten/Documents/UK/automatic_emission_reporting/File a output.xlsx"
 saveWorkbook(wb, path, overwrite=TRUE)
 
 
@@ -404,7 +404,7 @@ saveWorkbook(wb, path, overwrite=TRUE)
 # Broadly similar to File A; I only added comments where they differ.
 
 # PARAMETER
-path_excel ="C:/Users/czpkersten/Documents/automatic_emission_reporting/GovReg_Proj_T1a_T1b_T5a_T5b_v1.1 - Table1a.xlsx"
+path_excel ="C:/Users/Merlijn Kersten/Documents/UK/automatic_emission_reporting/GovReg_Proj_T1a_T1b_T5a_T5b_v1.1 - Table1a.xlsx"
 wb <- loadWorkbook(path_excel)
 
 # PARAMETER
@@ -416,7 +416,7 @@ columns_b <- list(
 )
 
 # PARAMETER
-rows_b <- read.csv("C:/Users/czpkersten/Documents/automatic_emission_reporting/rows_b.csv", header=FALSE)$V1
+rows_b <- read.csv("C:/Users/Merlijn Kersten/Documents/UK/automatic_emission_reporting/rows_b.csv", header=FALSE)$V1
 
 for (column in names(columns_b)) {
   values <- c()
@@ -475,7 +475,15 @@ for (column in names(columns_b)) {
       # PARAMETER
       rows_vector <- c("2A1", "2A2", "2A3", "2A4")
       commodity_value <- get_commodity_value(rows_vector, column)
+    
+    } else if (row=="2C") {
+      rows_vector <- "2C1"
+      commodity_value <- get_commodity_value(rows_vector, column)
       
+    } else if (row=="2D") {
+      rows_vector <- "2D1"
+      commodity_value <- get_commodity_value(rows_vector, column)
+  
     } else if (commodity %in% commodities) {
       
       commodity_value <- get_commodity_value(row, column)
@@ -495,6 +503,6 @@ for (column in names(columns_b)) {
 }
 
 # PARAMETER
-path = "C:/Users/czpkersten/Documents/automatic_emission_reporting/File b output.xlsx"
+path = "C:/Users/Merlijn Kersten/Documents/UK/automatic_emission_reporting/File b output.xlsx"
 saveWorkbook(wb, path, overwrite=TRUE)
 
